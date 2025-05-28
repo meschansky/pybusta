@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - PyBusta{% endblock %}
+
+{% block content %}
+<!-- Search Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1">
+                            <i class="bi bi-search me-2"></i>Search Results
+                        </h4>
+                        {% if result.total_count > 0 %}
+                            <p class="text-muted mb-0">
+                                Found {{ "{:,}".format(result.total_count) }} books 
+                                (showing {{ result.books|length }})
+                                in {{ "%.3f"|format(result.execution_time) }} seconds
+                            </p>
+                        {% else %}
+                            <p class="text-muted mb-0">No books found matching your criteria</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="/" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left me-1"></i>New Search
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Filters Display -->
+{% if result.query.title or result.query.author or result.query.genre or result.query.language or result.query.format %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-funnel me-1"></i>Active Filters:
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if result.query.title %}
+                        <span class="badge bg-primary">
+                            <i class="bi bi-book me-1"></i>Title: {{ result.query.title }}
+                        </span>
+                    {% endif %}
+                    {% if result.query.author %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-person me-1"></i>Author: {{ result.query.author }}
+                        </span>
+                    {% endif %}
+                    {% if result.query.genre %}
+                        <span class="badge bg-info">
+                            <i class="bi bi-tags me-1"></i>Genre: {{ result.query.genre }}
+                        </span>
+                    {% endif %}
+                    {% if result.query.language %}
+                        <span class="badge bg-warning">
+                            <i class="bi bi-globe me-1"></i>Language: {{ result.query.language }}
+                        </span>
+                    {% endif %}
+                    {% if result.query.format %}
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-file-earmark me-1"></i>Format: {{ result.query.format }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Results -->
+{% if result.books %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th width="8%">ID</th>
+                                <th width="25%">Author</th>
+                                <th width="35%">Title</th>
+                                <th width="8%">Language</th>
+                                <th width="8%">Format</th>
+                                <th width="10%">Size</th>
+                                <th width="6%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in result.books %}
+                            <tr>
+                                <td>
+                                    <code>{{ book.id }}</code>
+                                </td>
+                                <td>
+                                    <strong>{{ book.author }}</strong>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ book.title }}</div>
+                                    {% if book.added %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar me-1"></i>
+                                            {{ book.added.strftime('%Y-%m-%d') if book.added else 'Unknown' }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ book.language.upper() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ book.extension.upper() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if book.filesize < 1024*1024 %}
+                                        {{ (book.filesize/1024)|round|int }} KB
+                                    {% else %}
+                                        {{ (book.filesize/(1024*1024))|round(1) }} MB
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/extract/{{ book.id }}" 
+                                       class="btn btn-sm btn-primary"
+                                       title="Download book">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <nav aria-label="Search results pagination">
+            <ul class="pagination justify-content-center">
+                <!-- Previous page -->
+                {% if has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="/search?{% if result.query.title %}title={{ result.query.title|urlencode }}&{% endif %}{% if result.query.author %}author={{ result.query.author|urlencode }}&{% endif %}{% if result.query.language %}language={{ result.query.language|urlencode }}&{% endif %}{% if result.query.genre %}genre={{ result.query.genre|urlencode }}&{% endif %}{% if result.query.format %}format={{ result.query.format|urlencode }}&{% endif %}page={{ prev_page }}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </span>
+                    </li>
+                {% endif %}
+
+                <!-- Page numbers -->
+                {% set start_page = [1, current_page - 2]|max %}
+                {% set end_page = [total_pages, current_page + 2]|min %}
+                
+                {% if start_page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="/search?{% if result.query.title %}title={{ result.query.title|urlencode }}&{% endif %}{% if result.query.author %}author={{ result.query.author|urlencode }}&{% endif %}{% if result.query.language %}language={{ result.query.language|urlencode }}&{% endif %}{% if result.query.genre %}genre={{ result.query.genre|urlencode }}&{% endif %}{% if result.query.format %}format={{ result.query.format|urlencode }}&{% endif %}page=1">1</a>
+                    </li>
+                    {% if start_page > 2 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endif %}
+
+                {% for page_num in range(start_page, end_page + 1) %}
+                    {% if page_num == current_page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="/search?{% if result.query.title %}title={{ result.query.title|urlencode }}&{% endif %}{% if result.query.author %}author={{ result.query.author|urlencode }}&{% endif %}{% if result.query.language %}language={{ result.query.language|urlencode }}&{% endif %}{% if result.query.genre %}genre={{ result.query.genre|urlencode }}&{% endif %}{% if result.query.format %}format={{ result.query.format|urlencode }}&{% endif %}page={{ page_num }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if end_page < total_pages %}
+                    {% if end_page < total_pages - 1 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="/search?{% if result.query.title %}title={{ result.query.title|urlencode }}&{% endif %}{% if result.query.author %}author={{ result.query.author|urlencode }}&{% endif %}{% if result.query.language %}language={{ result.query.language|urlencode }}&{% endif %}{% if result.query.genre %}genre={{ result.query.genre|urlencode }}&{% endif %}{% if result.query.format %}format={{ result.query.format|urlencode }}&{% endif %}page={{ total_pages }}">
+                            {{ total_pages }}
+                        </a>
+                    </li>
+                {% endif %}
+
+                <!-- Next page -->
+                {% if has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="/search?{% if result.query.title %}title={{ result.query.title|urlencode }}&{% endif %}{% if result.query.author %}author={{ result.query.author|urlencode }}&{% endif %}{% if result.query.language %}language={{ result.query.language|urlencode }}&{% endif %}{% if result.query.genre %}genre={{ result.query.genre|urlencode }}&{% endif %}{% if result.query.format %}format={{ result.query.format|urlencode }}&{% endif %}page={{ next_page }}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <!-- Page info -->
+        <div class="text-center text-muted">
+            <small>
+                Page {{ current_page }} of {{ total_pages }} 
+                ({{ "{:,}".format(result.total_count) }} total results)
+            </small>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<!-- No results -->
+<div class="row">
+    <div class="col-12">
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                <h3 class="mt-3 mb-3">No books found</h3>
+                <p class="text-muted mb-4">
+                    Try adjusting your search criteria or removing some filters.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="/" class="btn btn-primary">
+                        <i class="bi bi-arrow-left me-1"></i>New Search
+                    </a>
+                    <a href="/stats" class="btn btn-outline-secondary">
+                        <i class="bi bi-graph-up me-1"></i>Browse Statistics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add download progress indication
+document.querySelectorAll('a[href^="/extract/"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const button = this;
+        const originalContent = button.innerHTML;
+        
+        // Show loading state
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        button.classList.add('disabled');
+        
+        // Reset after a delay (the download will start)
+        setTimeout(() => {
+            button.innerHTML = originalContent;
+            button.classList.remove('disabled');
+        }, 2000);
+    });
+});
+
+// Add number formatting filter
+function numberFormat(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+</script>
+{% endblock %} 
