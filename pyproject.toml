@@ -63,6 +63,9 @@ where = ["src"]
 [tool.setuptools.package-dir]
 "" = "src"
 
+[tool.setuptools.package-data]
+"pybusta.web" = ["templates/*.html", "static/**/*"]
+
 [tool.black]
 line-length = 88
 target-version = ['py38']
