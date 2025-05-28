@@ -18,6 +18,7 @@ from ..core.models import (
     Book, DatabaseConfig, ExtractionResult, 
     IndexStats, SearchQuery, SearchResult
 )
+from ..opds.routes import create_opds_router
 
 # Setup logging for production
 def setup_production_logging():
@@ -70,6 +71,11 @@ def get_book_index() -> BookIndex:
         except IndexNotFoundError as e:
             raise HTTPException(status_code=503, detail=str(e))
     return book_index
+
+
+# Include OPDS router - must be after get_book_index is defined
+opds_router = create_opds_router(get_book_index)
+app.include_router(opds_router)
 
 
 @app.on_event("startup")

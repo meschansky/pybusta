@@ -142,6 +142,7 @@ The modern web interface provides:
 - **Statistics Dashboard**: Visual charts and detailed analytics
 - **Responsive Design**: Works perfectly on desktop and mobile
 - **REST API**: Complete API with Swagger documentation at `/api/docs`
+- **OPDS Catalog**: Full OPDS 1.2 support for e-book readers at `/opds/`
 
 ### API Endpoints
 
