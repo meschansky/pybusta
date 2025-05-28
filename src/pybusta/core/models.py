@@ -159,6 +159,29 @@ class DatabaseConfig(BaseModel):
             v.mkdir(parents=True, exist_ok=True)
         return v
     
+    @classmethod
+    def from_env(cls) -> 'DatabaseConfig':
+        """Create configuration from environment variables."""
+        import os
+        
+        # Get base data directory from environment or default
+        data_dir = Path(os.getenv('PYBUSTA_DATA_DIR', 'data'))
+        
+        # Build other paths relative to data_dir unless explicitly set
+        config_data = {
+            'data_dir': data_dir,
+            'db_path': Path(os.getenv('PYBUSTA_DB_PATH', str(data_dir / 'db'))),
+            'extract_path': Path(os.getenv('PYBUSTA_EXTRACT_PATH', str(data_dir / 'books'))),
+            'tmp_path': Path(os.getenv('PYBUSTA_TMP_PATH', '/tmp/pybusta')),
+        }
+        
+        # Handle index file path
+        index_file_env = os.getenv('PYBUSTA_INDEX_FILE')
+        if index_file_env:
+            config_data['index_file'] = Path(index_file_env)
+        
+        return cls(**config_data)
+    
     def __init__(self, **data):
         super().__init__(**data)
         # Set index_file default after data_dir is processed

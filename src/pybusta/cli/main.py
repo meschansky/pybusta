@@ -40,12 +40,16 @@ def main(ctx: click.Context, verbose: bool, data_dir: Optional[Path]) -> None:
     setup_logging(verbose)
     
     # Store configuration in context
-    config = DatabaseConfig()
     if data_dir:
+        # Use explicit data directory
+        config = DatabaseConfig()
         config.data_dir = data_dir
         config.db_path = data_dir / "db"
         config.extract_path = data_dir / "books"
         config.index_file = data_dir / "fb2.Flibusta.Net" / "flibusta_fb2_local.inpx"
+    else:
+        # Use environment configuration or defaults
+        config = DatabaseConfig.from_env()
     
     ctx.ensure_object(dict)
     ctx.obj['config'] = config

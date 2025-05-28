@@ -1,0 +1,52 @@
+[Unit]
+Description=PyBusta - Flibusta Book Archive Web Service (CLI)
+Documentation=https://github.com/meschansky/pybusta
+After=network.target
+Wants=network.target
+
+[Service]
+Type=exec
+User=pybusta
+Group=pybusta
+WorkingDirectory=/opt/pybusta
+
+# Python environment
+Environment=PYTHONPATH=/opt/pybusta
+Environment=PYTHONUNBUFFERED=1
+
+# PyBusta configuration via environment variables
+Environment=PYBUSTA_DATA_DIR=/var/lib/pybusta
+Environment=PYBUSTA_DB_PATH=/var/lib/pybusta/db
+Environment=PYBUSTA_EXTRACT_PATH=/var/lib/pybusta/books
+Environment=PYBUSTA_TMP_PATH=/tmp/pybusta
+Environment=PYBUSTA_INDEX_FILE=/var/lib/pybusta/fb2.Flibusta.Net/flibusta_fb2_local.inpx
+
+# Start the web server using CLI command
+ExecStart=/opt/pybusta/.venv/bin/pybusta web --host 0.0.0.0 --port 8080
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Process management
+Restart=always
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/pybusta /tmp/pybusta /var/log/pybusta
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pybusta
+
+[Install]
+WantedBy=multi-user.target 

@@ -53,9 +53,9 @@ pybusta = "pybusta.cli:main"
 pybusta-web = "pybusta.web:main"
 
 [project.urls]
-Homepage = "https://github.com/pybusta/pybusta"
-Repository = "https://github.com/pybusta/pybusta"
-Issues = "https://github.com/pybusta/pybusta/issues"
+Homepage = "https://github.com/meschansky/pybusta"
+Repository = "https://github.com/meschansky/pybusta"
+Issues = "https://github.com/meschansky/pybusta/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

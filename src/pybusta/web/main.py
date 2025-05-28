@@ -3,6 +3,7 @@ Modern FastAPI web application for PyBusta.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional
 
@@ -18,8 +19,29 @@ from ..core.models import (
     IndexStats, SearchQuery, SearchResult
 )
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
+# Setup logging for production
+def setup_production_logging():
+    """Configure logging for production deployment."""
+    log_level = os.getenv('PYBUSTA_LOG_LEVEL', 'info').upper()
+    
+    # Configure root logger
+    logging.basicConfig(
+        level=getattr(logging, log_level),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler()  # systemd will capture this
+        ]
+    )
+    
+    # Set specific logger levels
+    logging.getLogger('uvicorn.access').setLevel(logging.INFO)
+    logging.getLogger('uvicorn.error').setLevel(logging.INFO)
+    
+    # Reduce noise from some libraries in production
+    if log_level != 'DEBUG':
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+
+setup_production_logging()
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
@@ -31,8 +53,8 @@ app = FastAPI(
     redoc_url="/api/redoc"
 )
 
-# Global configuration
-config = DatabaseConfig()
+# Global configuration - use environment variables for deployment
+config = DatabaseConfig.from_env()
 book_index: Optional[BookIndex] = None
 
 # Templates
